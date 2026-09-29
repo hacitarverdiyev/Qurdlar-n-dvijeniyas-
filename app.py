@@ -2,12 +2,12 @@ import streamlit as st
 import pandas as pd
 import os
 
-st.set_page_config(page_title="Şöbə İdarəetmə", page_icon="👥")
+st.set_page_config(page_title="Kasıb otağı", page_icon="👥")
 
 DATA_FILE = "tapshiriqlar.csv"
 EXCEL_FILE = "Umumi_Tedbirler_Plani_Senedlerle_Is.xlsx"
 
-st.title("👥 Şöbə İdarəetmə və Tədbirlər Paneli - Giriş")
+st.title("👥 Kasıb otağı")
 
 # Sessiyada giriş statusunu yoxlayırıq
 if "giris_etdi" not in st.session_state:
@@ -19,7 +19,6 @@ if not st.session_state.giris_etdi:
     sifre = st.text_input("Şifrənizi daxil edin:", type="password")
     
     if st.button("Daxil ol"):
-        # Hər 3 işçi üçün ümumi və ya ayrı şifrə (məsələn: 123)
         if secilen_isci != "Seçin..." and sifre == "123":
             st.session_state.giris_etdi = True
             st.session_state.istifadeci = secilen_isci
