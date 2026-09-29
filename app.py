@@ -4,12 +4,11 @@ import os
 
 st.set_page_config(page_title="Kasıb otağı", page_icon="👥")
 
-DATA_FILE = "tapshiriqlar.csv"
-EXCEL_FILE = "Umumi_Tedbirler_Plani_Senedlerle_Is.xlsx"
+DATA_FILE = "kasib_otagi_cedvel.csv"
 
 st.title("👥 Kasıb otağı")
 
-# Əgər əvvəlcədən daxil olmayıbsa, şifrə istə
+# Giriş sistemi (şifrə: 123)
 if "giris" not in st.session_state:
     st.session_state.giris = False
 
@@ -26,38 +25,58 @@ else:
         st.session_state.giris = False
         st.rerun()
 
-    st.subheader("📁 Şöbələrin Ümumi Tədbirlər Planı")
-    if os.path.exists(EXCEL_FILE):
-        excel_df = pd.read_excel(EXCEL_FILE)
-        st.dataframe(excel_df, use_container_width=True)
-        
-        with open(EXCEL_FILE, "rb") as f:
-            st.download_button("📥 Excel Yüklə", f, file_name=EXCEL_FILE)
+    st.subheader("📋 Komanda İzləmə Cədvəli")
 
-    st.markdown("---")
-    
+    # Məlumatları oxumaq və ya yaratmaq
     if os.path.exists(DATA_FILE):
         df = pd.read_csv(DATA_FILE)
     else:
-        df = pd.DataFrame(columns=["Tapşırıq", "İcraçı", "Status"])
+        df = pd.DataFrame(columns=[
+            "Sıra sayı", 
+            "VÖEN", 
+            "VÖ", 
+            "Görülmüş işlər", 
+            "Görüləcək işlər", 
+            "Qeyd"
+        ])
 
-    st.subheader("📌 Tapşırıqlar")
-    yeni = st.text_input("Yeni tapşırıq:")
-    icraci = st.selectbox("İcraçı:", ["kasib 1", "kasib 2", "kasib 3"])
+    # Cədvəli ekranda göstərmək
+    st.dataframe(df, use_container_width=True)
 
-    if st.button("Əlavə Et"):
-        if yeni:
-            yeni_setir = pd.DataFrame({"Tapşırıq": [yeni], "İcraçı": [icraci], "Status": ["Gözləmədə"]})
+    st.markdown("---")
+    st.subheader("➕ Yeni Məlumat / Sətir Əlavə Et")
+
+    with st.form("yeni_melumat_formu"):
+        sira = st.number_input("Sıra sayı", min_value=1, step=1, value=len(df)+1)
+        voen = st.text_input("VÖEN")
+        vo = st.text_input("VÖ")
+        gorulmus = st.text_area("Görülmüş işlər")
+        gorulecek = st.text_area("Görüləcək işlər")
+        qeyd = st.text_input("Qeyd")
+        
+        submit = st.form_submit_button("Cədvəliyə Əlavə Et")
+        
+        if submit:
+            yeni_setir = pd.DataFrame({
+                "Sıra sayı": [sira],
+                "VÖEN": [voen],
+                "VÖ": [vo],
+                "Görülmüş işlər": [gorulmus],
+                "Görüləcək işlər": [gorulecek],
+                "Qeyd": [qeyd]
+            })
             df = pd.concat([df, yeni_setir], ignore_index=True)
             df.to_csv(DATA_FILE, index=False)
+            st.success("Məlumat uğurla əlavə olundu!")
             st.rerun()
 
+    # Məlumat silmək və ya təmizləmək üçün imkan
     if not df.empty:
-        st.dataframe(df, use_container_width=True)
-        index = st.number_input("Tapşırıq nömrəsi:", min_value=0, max_value=max(0, len(df)-1), step=1)
-        status = st.selectbox("Status:", ["Gözləmədə", "İcrada", "Tamamlandı"])
-        
-        if st.button("Statusu Yenilə"):
-            df.loc[index, "Status"] = status
+        st.markdown("---")
+        st.subheader("🗑️ Sətir Sil")
+        silinecek_index = st.number_input("Silinəcək sətrin nömrəsi (Index)", min_value=0, max_value=max(0, len(df)-1), step=1)
+        if st.button("Seçilmiş Sətri Sil"):
+            df = df.drop(silinecek_index).reset_index(drop=True)
             df.to_csv(DATA_FILE, index=False)
+            st.success("Sətir silindi!")
             st.rerun()
