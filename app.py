@@ -26,23 +26,27 @@ else:
         st.rerun()
 
     st.markdown("---")
-    st.subheader("📁 Excel Faylını Yüklə (Upload)")
+    st.subheader("📁 Fayl Yüklə (Upload)")
 
-    # Excel/CSV faylını yükləmək üçün panel
-    yuklenen_fayl = st.file_uploader("Şablon faylınızı seçin (.xlsx, .xls, .csv)", type=["xlsx", "xls", "csv"])
+    # Fayl yükləmə paneli (Excel üçün xəta verməməsi adına təhlükəsiz yoxlama ilə)
+    yuklenen_fayl = st.file_uploader("Faylınızı seçin (CSV tövsiyə olunur)", type=["csv", "xlsx", "xls"])
     
     if yuklenen_fayl is not None:
         try:
-            # Faylın formatına uyğun oxuyub əsas məlumat bazamıza çeviririk
             if yuklenen_fayl.name.endswith('.csv'):
                 yuklenen_df = pd.read_csv(yuklenen_fayl)
+                yuklenen_df.to_csv(DATA_FILE, index=False)
+                st.success("CSV faylı uğurla yükləndi və yeniləndi!")
+                st.rerun()
             else:
-                yuklenen_df = pd.read_excel(yuklenen_fayl)
-            
-            # Yüklənən məlumatı birbaşa CSV olaraq saxlayırıq ki, hər kəs görsün
-            yuklenen_df.to_csv(DATA_FILE, index=False)
-            st.success("Fayl uğurla yükləndi və cədvəl yeniləndi!")
-            st.rerun()
+                # Excel olduqda openpyxl yoxlanılır, əgər yoxdursa istifadəçiyə bildirilir
+                try:
+                    yuklenen_df = pd.read_excel(yuklenen_fayl)
+                    yuklenen_df.to_csv(DATA_FILE, index=False)
+                    st.success("Excel faylı uğurla yükləndi və yeniləndi!")
+                    st.rerun()
+                except Exception:
+                    st.error("Serverdə Excel (.xlsx) oxunması üçün 'openpyxl' kitabxanası yoxdur. Zəhmət olmasa faylınızı **CSV** formatında yadda saxlayıb yükləyin (və ya aşağıdan birbaşa yeni sətrlər əlavə edin).")
         except Exception as e:
             st.error(f"Fayl oxunarkən xəta baş verdi: {e}")
 
