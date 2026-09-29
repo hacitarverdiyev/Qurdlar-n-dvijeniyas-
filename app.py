@@ -28,13 +28,12 @@ else:
     st.markdown("---")
     st.subheader("📁 Excel və ya CSV Faylını Yüklə (Upload)")
 
-    # Fayl yükləmə paneli (həm .xlsx, həm .xls, həm .csv dəstəklənir)
+    # Fayl yükləmə paneli
     yuklenen_fayl = st.file_uploader("Faylınızı seçin (.xlsx, .xls, .csv)", type=["xlsx", "xls", "csv"])
     
     if yuklenen_fayl is not None:
         try:
             if yuklenen_fayl.name.endswith('.csv'):
-                # Fərqli kodlaşdırmaları yoxlayaraq CSV oxuyuruq
                 bytes_data = yuklenen_fayl.getvalue()
                 yuklenen_df = None
                 for encoding in ['utf-8', 'cp1251', 'latin-1', 'iso-8859-9']:
@@ -45,12 +44,12 @@ else:
                     except UnicodeDecodeError:
                         continue
             else:
-                # Excel faylını openpyxl vasitəsilə oxuyuruq
                 yuklenen_df = pd.read_excel(yuklenen_fayl)
             
             if yuklenen_df is not None:
+                # Yüklənən faylı birbaşa əsas bazaya yazırıq ki, dərhal dəyişsin
                 yuklenen_df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
-                st.success("Fayl uğurla yükləndi və cədvəl yeniləndi!")
+                st.success("Fayl uğurla yükləndi və cədvəl dərhal yeniləndi!")
                 st.rerun()
             else:
                 st.error("Fayl oxuna bilmədi.")
