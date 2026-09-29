@@ -2,45 +2,38 @@ import streamlit as st
 import pandas as pd
 import os
 
-st.set_page_config(page_title="Şöbə İdarəetmə", page_icon="🔐")
+st.set_page_config(page_title="Şöbə İdarəetmə", page_icon="👥")
 
 DATA_FILE = "tapshiriqlar.csv"
 EXCEL_FILE = "Umumi_Tedbirler_Plani_Senedlerle_Is.xlsx"
 
-st.title("🔐 Şöbə İdarəetmə Sistemi - Giriş")
+st.title("👥 Şöbə İdarəetmə və Tədbirlər Paneli - Giriş")
 
 # Sessiyada giriş statusunu yoxlayırıq
 if "giris_etdi" not in st.session_state:
     st.session_state.giris_etdi = False
+    st.session_state.istifadeci = ""
 
 if not st.session_state.giris_etdi:
-    rol = st.selectbox("Rolunuzu seçin:", ["Seçin...", "İşçi", "Rəis"])
+    secilen_isci = st.selectbox("İşçi seçin:", ["Seçin...", "kasib 1", "kasib 2", "kasib 3"])
+    sifre = st.text_input("Şifrənizi daxil edin:", type="password")
     
-    if rol == "İşçi":
-        sifre = st.text_input("İşçi şifrəsini daxil edin:", type="password")
-        if st.button("Daxil ol"):
-            if sifre == "isci123":
-                st.session_state.giris_etdi = True
-                st.success("Uğurlu giriş!")
-                st.rerun()
-            else:
-                st.error("Yanlış şifrə!")
-                
-    elif rol == "Rəis":
-        sifre = st.text_input("Rəis şifrəsini daxil edin:", type="password")
-        if st.button("Daxil ol"):
-            if sifre == "reis123":
-                st.session_state.giris_etdi = True
-                st.success("Uğurlu giriş!")
-                st.rerun()
-            else:
-                st.error("Yanlış şifrə!")
+    if st.button("Daxil ol"):
+        # Hər 3 işçi üçün ümumi və ya ayrı şifrə (məsələn: 123)
+        if secilen_isci != "Seçin..." and sifre == "123":
+            st.session_state.giris_etdi = True
+            st.session_state.istifadeci = secilen_isci
+            st.success(f"Xoş gəldiniz, {secilen_isci}!")
+            st.rerun()
+        else:
+            st.error("Zəhmət olmasa işçi seçin və düzgün şifrə daxil edin! (Şifrə: 123)")
                 
 else:
-    # Əgər daxil olubsa, əsas paneli göstəririk
-    st.success("Sistemə uğurla daxil olmusunuz.")
+    # Əgər daxil olubsa
+    st.success(f"Sistemdəsiniz: **{st.session_state.istifadeci}**")
     if st.button("Çıxış et"):
         st.session_state.giris_etdi = False
+        st.session_state.istifadeci = ""
         st.rerun()
 
     st.markdown("---")
@@ -69,7 +62,7 @@ else:
     st.subheader("📌 Bütün Cari Tapşırıqlar")
     
     yeni = st.text_input("Yeni tapşırıq əlavə et:")
-    icraci = st.selectbox("İcraçı seçin:", ["İşçi 1", "İşçi 2", "İşçi 3"])
+    icraci = st.selectbox("İcraçı təyin et:", ["kasib 1", "kasib 2", "kasib 3"])
 
     if st.button("Əlavə Et"):
         if yeni:
