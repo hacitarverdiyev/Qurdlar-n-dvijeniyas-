@@ -26,6 +26,27 @@ else:
         st.rerun()
 
     st.markdown("---")
+    st.subheader("📁 Excel Faylını Yüklə (Upload)")
+
+    # Excel/CSV faylını yükləmək üçün panel
+    yuklenen_fayl = st.file_uploader("Şablon faylınızı seçin (.xlsx, .xls, .csv)", type=["xlsx", "xls", "csv"])
+    
+    if yuklenen_fayl is not None:
+        try:
+            # Faylın formatına uyğun oxuyub əsas məlumat bazamıza çeviririk
+            if yuklenen_fayl.name.endswith('.csv'):
+                yuklenen_df = pd.read_csv(yuklenen_fayl)
+            else:
+                yuklenen_df = pd.read_excel(yuklenen_fayl)
+            
+            # Yüklənən məlumatı birbaşa CSV olaraq saxlayırıq ki, hər kəs görsün
+            yuklenen_df.to_csv(DATA_FILE, index=False)
+            st.success("Fayl uğurla yükləndi və cədvəl yeniləndi!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Fayl oxunarkən xəta baş verdi: {e}")
+
+    st.markdown("---")
     st.subheader("📊 Komanda İdarəetmə Cədvəli")
 
     # Məlumatları oxumaq və ya ilkin cədvəl yaratmaq
@@ -46,7 +67,7 @@ else:
     # Cədvəli ekranda vizual olaraq göstəririk
     st.dataframe(df, use_container_width=True)
 
-    # Cədvəli endirmək üçün düymə (CSV formatında - heç bir əlavə kitabxana tələb etmir)
+    # Cədvəli endirmək üçün düymə
     csv_data = df.to_csv(index=False).encode('utf-8')
     st.download_button(
         label="📥 Cədvəli Fayl Olaraq Endir",
