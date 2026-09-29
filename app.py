@@ -4,7 +4,7 @@ import os
 
 st.set_page_config(page_title="Kasıb otağı", page_icon="👥")
 
-DATA_FILE = "kasib_otagi_cedvel.csv"
+EXCEL_FILE = "kasib_otagi_excel.xlsx"
 
 st.title("👥 Kasıb otağı")
 
@@ -25,58 +25,34 @@ else:
         st.session_state.giris = False
         st.rerun()
 
-    st.subheader("📋 Komanda İzləmə Cədvəli")
+    st.subheader("📁 Komanda Cədvəli və Excel Yükləmə")
 
-    # Məlumatları oxumaq və ya yaratmaq
-    if os.path.exists(DATA_FILE):
-        df = pd.read_csv(DATA_FILE)
+    # Fayl yükləmə paneli (Upload)
+    yuklenen_fayl = st.file_uploader("Excel faylını yüklə (.xlsx)", type=["xlsx", "xls"])
+    
+    if yuklenen_fayl is not None:
+        # Fayl yüklənən kimi onu serverdə yadda saxlayırıq
+        with open(EXCEL_FILE, "wb") as f:
+            f.write(yuklenen_fayl.getbuffer())
+        st.success("Excel fayl uğurla yükləndi!")
+
+    # Mövcud faylı oxumaq və göstərmək
+    if os.path.exists(EXCEL_FILE):
+        try:
+            df = pd.read_excel(EXCEL_FILE)
+            st.markdown("---")
+            st.subheader("📊 Cari Cədvəl Görünüşü")
+            st.dataframe(df, use_container_width=True)
+            
+            # Faylı endirmək üçün düymə
+            with open(EXCEL_FILE, "rb") as f:
+                st.download_button(
+                    label="📥 Cədvəli Excel Olaraq Endir",
+                    data=f,
+                    file_name="Kasib_Otagi_Plan.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+        except Exception as e:
+            st.error(f"Fayl oxunarkən xəta baş verdi: {e}")
     else:
-        df = pd.DataFrame(columns=[
-            "Sıra sayı", 
-            "VÖEN", 
-            "VÖ", 
-            "Görülmüş işlər", 
-            "Görüləcək işlər", 
-            "Qeyd"
-        ])
-
-    # Cədvəli ekranda göstərmək
-    st.dataframe(df, use_container_width=True)
-
-    st.markdown("---")
-    st.subheader("➕ Yeni Məlumat / Sətir Əlavə Et")
-
-    with st.form("yeni_melumat_formu"):
-        sira = st.number_input("Sıra sayı", min_value=1, step=1, value=len(df)+1)
-        voen = st.text_input("VÖEN")
-        vo = st.text_input("VÖ")
-        gorulmus = st.text_area("Görülmüş işlər")
-        gorulecek = st.text_area("Görüləcək işlər")
-        qeyd = st.text_input("Qeyd")
-        
-        submit = st.form_submit_button("Cədvəliyə Əlavə Et")
-        
-        if submit:
-            yeni_setir = pd.DataFrame({
-                "Sıra sayı": [sira],
-                "VÖEN": [voen],
-                "VÖ": [vo],
-                "Görülmüş işlər": [gorulmus],
-                "Görüləcək işlər": [gorulecek],
-                "Qeyd": [qeyd]
-            })
-            df = pd.concat([df, yeni_setir], ignore_index=True)
-            df.to_csv(DATA_FILE, index=False)
-            st.success("Məlumat uğurla əlavə olundu!")
-            st.rerun()
-
-    # Məlumat silmək və ya təmizləmək üçün imkan
-    if not df.empty:
-        st.markdown("---")
-        st.subheader("🗑️ Sətir Sil")
-        silinecek_index = st.number_input("Silinəcək sətrin nömrəsi (Index)", min_value=0, max_value=max(0, len(df)-1), step=1)
-        if st.button("Seçilmiş Sətri Sil"):
-            df = df.drop(silinecek_index).reset_index(drop=True)
-            df.to_csv(DATA_FILE, index=False)
-            st.success("Sətir silindi!")
-            st.rerun()
+        st.info("Zəhmət olmasa yuxarıdakı paneldən Excel faylınızı yükləyin.")
