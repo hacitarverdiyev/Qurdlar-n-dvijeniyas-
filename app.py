@@ -26,9 +26,9 @@ else:
         st.rerun()
 
     st.markdown("---")
-    st.subheader("📊 Komanda İdarəetmə Cədvəli (Vizual)")
+    st.subheader("📊 Komanda İdarəetmə Cədvəli")
 
-    # Əgər fayl yoxdursa, istədiyiniz 6 sütunla ilkin cədvəl yaradırıq
+    # Məlumatları oxumaq və ya ilkin cədvəl yaratmaq
     if os.path.exists(DATA_FILE):
         df = pd.read_csv(DATA_FILE)
     else:
@@ -43,20 +43,17 @@ else:
         df = pd.DataFrame(data)
         df.to_csv(DATA_FILE, index=False)
 
-    # Cədvəli ekranda vizual olaraq göstəririk (Hər kəs görür)
+    # Cədvəli ekranda vizual olaraq göstəririk
     st.dataframe(df, use_container_width=True)
 
-    # Cədvəli Excel formatında endirmək üçün düymə
-    excel_export_path = "Kasib_Otagi_Plan.xlsx"
-    df.to_excel(excel_export_path, index=False)
-    
-    with open(excel_export_path, "rb") as f:
-        st.download_button(
-            label="📥 Cədvəli Excel Olaraq Endir",
-            data=f,
-            file_name="Kasib_Otagi_Plan.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    # Cədvəli endirmək üçün düymə (CSV formatında - heç bir əlavə kitabxana tələb etmir)
+    csv_data = df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="📥 Cədvəli Fayl Olaraq Endir",
+        data=csv_data,
+        file_name="Kasib_Otagi_Plan.csv",
+        mime="text/csv"
+    )
 
     st.markdown("---")
     st.subheader("➕ Cədvəliyə Yeni Məlumat Əlavə Et")
@@ -82,7 +79,7 @@ else:
             })
             df = pd.concat([df, yeni_setir], ignore_index=True)
             df.to_csv(DATA_FILE, index=False)
-            st.success("Məlumat uğurla əlavə olundu və hər kəs üçün yeniləndi!")
+            st.success("Məlumat uğurla əlavə olundu!")
             st.rerun()
 
     # Sətir silmək bölməsi
