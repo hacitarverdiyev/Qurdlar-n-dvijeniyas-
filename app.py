@@ -26,27 +26,34 @@ else:
         st.rerun()
 
     st.markdown("---")
-    st.subheader("📁 Fayl Yüklə (Upload)")
+    st.subheader("📁 Excel və ya CSV Faylını Yüklə (Upload)")
 
-    # Fayl yükləmə paneli (Excel üçün xəta verməməsi adına təhlükəsiz yoxlama ilə)
-    yuklenen_fayl = st.file_uploader("Faylınızı seçin (CSV tövsiyə olunur)", type=["csv", "xlsx", "xls"])
+    # Fayl yükləmə paneli (həm .xlsx, həm .xls, həm .csv dəstəklənir)
+    yuklenen_fayl = st.file_uploader("Faylınızı seçin (.xlsx, .xls, .csv)", type=["xlsx", "xls", "csv"])
     
     if yuklenen_fayl is not None:
         try:
             if yuklenen_fayl.name.endswith('.csv'):
-                yuklenen_df = pd.read_csv(yuklenen_fayl)
-                yuklenen_df.to_csv(DATA_FILE, index=False)
-                st.success("CSV faylı uğurla yükləndi və yeniləndi!")
+                # Fərqli kodlaşdırmaları yoxlayaraq CSV oxuyuruq
+                bytes_data = yuklenen_fayl.getvalue()
+                yuklenen_df = None
+                for encoding in ['utf-8', 'cp1251', 'latin-1', 'iso-8859-9']:
+                    try:
+                        from io import BytesIO
+                        yuklenen_df = pd.read_csv(BytesIO(bytes_data), encoding=encoding)
+                        break
+                    except UnicodeDecodeError:
+                        continue
+            else:
+                # Excel faylını openpyxl vasitəsilə oxuyuruq
+                yuklenen_df = pd.read_excel(yuklenen_fayl)
+            
+            if yuklenen_df is not None:
+                yuklenen_df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
+                st.success("Fayl uğurla yükləndi və cədvəl yeniləndi!")
                 st.rerun()
             else:
-                # Excel olduqda openpyxl yoxlanılır, əgər yoxdursa istifadəçiyə bildirilir
-                try:
-                    yuklenen_df = pd.read_excel(yuklenen_fayl)
-                    yuklenen_df.to_csv(DATA_FILE, index=False)
-                    st.success("Excel faylı uğurla yükləndi və yeniləndi!")
-                    st.rerun()
-                except Exception:
-                    st.error("Serverdə Excel (.xlsx) oxunması üçün 'openpyxl' kitabxanası yoxdur. Zəhmət olmasa faylınızı **CSV** formatında yadda saxlayıb yükləyin (və ya aşağıdan birbaşa yeni sətrlər əlavə edin).")
+                st.error("Fayl oxuna bilmədi.")
         except Exception as e:
             st.error(f"Fayl oxunarkən xəta baş verdi: {e}")
 
@@ -55,7 +62,10 @@ else:
 
     # Məlumatları oxumaq və ya ilkin cədvəl yaratmaq
     if os.path.exists(DATA_FILE):
-        df = pd.read_csv(DATA_FILE)
+        try:
+            df = pd.read_csv(DATA_FILE, encoding='utf-8-sig')
+        except:
+            df = pd.read_csv(DATA_FILE, encoding='cp1251')
     else:
         data = {
             "Sıra sayı": [1, 2],
@@ -66,13 +76,13 @@ else:
             "Qeyd": ["Vacib", "Normal"]
         }
         df = pd.DataFrame(data)
-        df.to_csv(DATA_FILE, index=False)
+        df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
 
     # Cədvəli ekranda vizual olaraq göstəririk
     st.dataframe(df, use_container_width=True)
 
     # Cədvəli endirmək üçün düymə
-    csv_data = df.to_csv(index=False).encode('utf-8')
+    csv_data = df.to_csv(index=False).encode('utf-8-sig')
     st.download_button(
         label="📥 Cədvəli Fayl Olaraq Endir",
         data=csv_data,
@@ -103,7 +113,7 @@ else:
                 "Qeyd": [qeyd]
             })
             df = pd.concat([df, yeni_setir], ignore_index=True)
-            df.to_csv(DATA_FILE, index=False)
+            df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
             st.success("Məlumat uğurla əlavə olundu!")
             st.rerun()
 
@@ -114,6 +124,6 @@ else:
         silinecek_index = st.number_input("Silinəcək sətrin nömrəsi (Index)", min_value=0, max_value=max(0, len(df)-1), step=1)
         if st.button("Seçilmiş Sətri Sil"):
             df = df.drop(silinecek_index).reset_index(drop=True)
-            df.to_csv(DATA_FILE, index=False)
+            df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
             st.success("Sətir silindi!")
             st.rerun()
