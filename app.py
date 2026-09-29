@@ -4,11 +4,11 @@ import os
 
 st.set_page_config(page_title="Kasıb otağı", page_icon="👥")
 
-EXCEL_FILE = "kasib_otagi_excel.xlsx"
+EXCEL_FILE = "Umumi_Tedbirler_Plani_Senedlerle_Is.xlsx"
 
 st.title("👥 Kasıb otağı")
 
-# Giriş sistemi (şifrə: 123)
+# 1. Giriş sistemi (şifrə: 123)
 if "giris" not in st.session_state:
     st.session_state.giris = False
 
@@ -25,34 +25,35 @@ else:
         st.session_state.giris = False
         st.rerun()
 
-    st.subheader("📁 Komanda Cədvəli və Excel Yükləmə")
+    st.markdown("---")
+    st.subheader("📁 Komanda Cədvəli və Excel İdarəetməsi")
 
-    # Fayl yükləmə paneli (Upload)
+    # Excel faylını yükləmək (Upload) üçün panel
     yuklenen_fayl = st.file_uploader("Excel faylını yüklə (.xlsx)", type=["xlsx", "xls"])
     
     if yuklenen_fayl is not None:
-        # Fayl yüklənən kimi onu serverdə yadda saxlayırıq
         with open(EXCEL_FILE, "wb") as f:
             f.write(yuklenen_fayl.getbuffer())
-        st.success("Excel fayl uğurla yükləndi!")
+        st.success("Excel faylı uğurla yeniləndi və yükləndi!")
+        st.rerun()
 
-    # Mövcud faylı oxumaq və göstərmək
+    # Fayl mövcuddursa oxuyub göstəririk
     if os.path.exists(EXCEL_FILE):
         try:
             df = pd.read_excel(EXCEL_FILE)
-            st.markdown("---")
-            st.subheader("📊 Cari Cədvəl Görünüşü")
+            
+            st.markdown("### 📊 Cari Cədvəl")
             st.dataframe(df, use_container_width=True)
             
-            # Faylı endirmək üçün düymə
+            # Cədvəli yenidən endirmək üçün düymə
             with open(EXCEL_FILE, "rb") as f:
                 st.download_button(
                     label="📥 Cədvəli Excel Olaraq Endir",
                     data=f,
-                    file_name="Kasib_Otagi_Plan.xlsx",
+                    file_name="Umumi_Tedbirler_Plani_Senedlerle_Is.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
         except Exception as e:
             st.error(f"Fayl oxunarkən xəta baş verdi: {e}")
     else:
-        st.info("Zəhmət olmasa yuxarıdakı paneldən Excel faylınızı yükləyin.")
+        st.info("Hələ ki Excel fayl yüklənməyib. Zəhmət olmasa yuxarıdan faylı yükləyin.")
