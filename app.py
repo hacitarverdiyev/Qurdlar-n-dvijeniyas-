@@ -5,16 +5,14 @@ import os
 DATA_FILE = "tapshiriqlar.csv"
 EXCEL_FILE = "Umumi_Tedbirler_Plani_Senedlerle_Is.xlsx"
 
-st.title("📊 Şöbə İdarəetmə və Tədbirlər Planı")
+st.title("📊 Şöbə İdarəetmə və Tədbirlər Paneli")
 
-# 1. Excel faylını oxumaq və göstərmək bölməsi
-st.subheader("📁 Şöbələrin Ümumi Tədbirlər Planı (Excel)")
+# 1. Bütün məlumatların (Excel cədvəlinin) işçilər tərəfindən görünməsi
+st.subheader("📁 Şöbələrin Ümumi Tədbirlər Planı")
 if os.path.exists(EXCEL_FILE):
-    # Excel faylını oxuyuruq
     excel_df = pd.read_excel(EXCEL_FILE)
     st.dataframe(excel_df, use_container_width=True)
     
-    # İşçilər üçün Excel faylını birbaşa endirmək düyməsi
     with open(EXCEL_FILE, "rb") as f:
         st.download_button(
             label="📥 Excel Faylını Yüklə",
@@ -27,15 +25,16 @@ else:
 
 st.markdown("---")
 
-# 2. Operativ Tapşırıq İdarəetməsi
+# 2. Operativ Tapşırıqlar Siyahısı (Bütün işçilər bütün tapşırıqları görür)
 if os.path.exists(DATA_FILE):
     df = pd.read_csv(DATA_FILE)
 else:
     df = pd.DataFrame(columns=["Tapşırıq", "İcraçı", "Status"])
 
-st.subheader("📌 Operativ Tapşırıqlar Paneli")
+st.subheader("📌 Bütün Cari Tapşırıqlar")
 
-yeni = st.text_input("Yeni tapşırıq daxil edin:")
+# Yeni tapşırıq əlavə etmək (rəis və ya işçi)
+yeni = st.text_input("Yeni tapşırıq əlavə et:")
 icraci = st.selectbox("İcraçı seçin:", ["İşçi 1", "İşçi 2", "İşçi 3"])
 
 if st.button("Əlavə Et"):
@@ -47,8 +46,10 @@ if st.button("Əlavə Et"):
         st.rerun()
 
 if not df.empty:
+    # Cədvəli tam olaraq göstəririk ki, hər kəs bütün işləri görsün
     st.dataframe(df, use_container_width=True)
     
+    st.subheader("🔄 Tapşırıq Statusunu Yenilə")
     index = st.number_input("Tapşırıq nömrəsi (Index):", min_value=0, max_value=max(0, len(df)-1), step=1)
     status = st.selectbox("Yeni status:", ["Gözləmədə", "İcrada", "Tamamlandı"])
     
@@ -59,25 +60,3 @@ if not df.empty:
         st.rerun()
 else:
     st.info("Hələ ki operativ tapşırıq yoxdur.")
-    import streamlit as st
-
-# Sadə şifrə sistemi
-st.title("🔐 Şöbə İdarəetmə Sistemi - Giriş")
-
-rol = st.selectbox("Giriş növünü seçin:", ["İşçi", "Rəis"])
-
-if rol == "İşçi":
-    sifre = st.text_input("İşçi şifrəsini daxil edin:", type="password")
-    if sifre == "isçi123": # İşçilər üçün ümumi şifrə
-        st.success("Xoş gəldiniz, İşçi!")
-        # İşçinin görəcəyi və status yeniləyəcəyi hissə bura yazılır
-    elif sifre != "":
-        st.error("Yanlış şifrə!")
-
-elif rol == "Rəis":
-    sifre = st.text_input("Rəis şifrəsini daxil edin:", type="password")
-    if sifre == "rəis123": # Rəis üçün xüsusi şifrə
-        st.success("Xoş gəldiniz, Rəis!")
-        # Rəisin yeni tapşırıq təyin etmə və bütün cədvəli görmə paneli bura yazılır
-    elif sifre != "":
-        st.error("Yanlış şifrə!")
